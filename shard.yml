@@ -1,0 +1,9 @@
+name: crypto+
+version: 0.1.0a
+
+authors:
+  - Chris Huxtable <chris@huxtable.ca>
+
+crystal: 0.24.2
+
+license: ISC
