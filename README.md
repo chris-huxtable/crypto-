@@ -1,4 +1,4 @@
-# crypto.cr
+# crypto-plus.cr
 
 **Work In Progress**
 
