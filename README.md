@@ -4,13 +4,18 @@
 
 Adds new crypto features to crystal. Currently planned:
 
-Algorithems
-- AES CBC 128/192/256
+Algorithems:
 - AES GCM 128/192/256
+- AES OFB 128/192/256
+- AES CFB 128/192/256
+- AES CTR 128/192/256
+- AES CBC 128/192/256 *not yet supported*
+- AES XTS 128/192/256 *not yet supported*
+- AES ECB 128/192/256 *not yet supported*
 
 Key Stretching
-- bcrypt
-
+- bcrypt *not yet supported*
+- PBKDF2 *not yet supported*
 
 ## Installation
 
@@ -28,8 +33,6 @@ dependencies:
 ```crystal
 require "crypto+"
 ```
-
-TODO: Write usage instructions here
 
 
 ## Contributing
