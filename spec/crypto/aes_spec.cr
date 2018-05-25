@@ -31,7 +31,6 @@ end
 	private def test_{{ name.id }}(key_size, key, iv, data)
 
 		key		= key.ljust((key_size/8).to_i, '\0').encode("UTF-8")
-
 		{% if name == "gcm" %}\
 			iv		= iv.ljust(12, '\0').encode("UTF-8")
 		{% else %}\
@@ -44,7 +43,7 @@ end
 		encrypted = encryptor.encrypt(data)
 		decrypted = decryptor.decrypt(encrypted)
 
-
+		decrypted.size.should_not eq(0)
 		data.should eq(String.new(decrypted))
 		Base64.strict_encode(encrypted).should eq(check_openssl(key, iv, data,  "aes-#{key_size}-{{ name.id }}"))
 
