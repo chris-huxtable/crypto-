@@ -13,7 +13,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 require "openssl/cipher"
-
+require "../openssl/*"
 
 abstract class Crypto::Cipher
 

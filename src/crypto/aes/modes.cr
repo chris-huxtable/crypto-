@@ -35,13 +35,26 @@ module Crypto::AES
 
 	module GCM
 
-		Mode.construct_factories()
+		alias IV = Cipher::IV
+
+		def self.encryptor(key : Bytes, iv : Bytes|IV = IV::Random, tag : Bytes? = nil) : Cipher::Encryptor
+			return Cipher.new(key, iv, tag).encryptor
+		end
+
+		def self.decryptor(key : Bytes, iv : Bytes|IV = IV::Prefix, tag : Bytes? = nil) : Cipher::Decryptor
+			return Cipher.new(key, iv, tag).decryptor
+		end
 
 		def self.iv_size() : Int32
 			return Cipher::BYTES_96
 		end
 
 		private class Cipher < Crypto::AES::Cipher
+
+		def initialize(key : Bytes, iv : Bytes|IV, tag : Bytes?)
+			super(key, iv)
+			@cipher.tag = tag if ( tag )
+		end
 
 			def cipher_string(key_size : Int) : String
 				return case key_size
@@ -109,12 +122,14 @@ module Crypto::AES
 
 	module ECB
 
+		alias IV = Cipher::IV
+
 		def self.encryptor(key : Bytes) : Cipher::Encryptor
-			return Cipher.new(key, Cipher::IV::Zero).encryptor
+			return Cipher.new(key, IV::Zero).encryptor
 		end
 
 		def self.decryptor(key : Bytes) : Cipher::Decryptor
-			return Cipher.new(key, Cipher::IV::Zero).decryptor
+			return Cipher.new(key, IV::Zero).decryptor
 		end
 
 		def self.iv_size() : Int32
