@@ -17,44 +17,58 @@ require "../spec_helper"
 
 private OPENSSL = "/usr/bin/openssl"
 
-private def check_openssl(key, iv, data, algo) : String
-	args = { "enc", "-e", "-base64", "-nosalt", "-"+algo, "-iv", iv.hexstring, "-K", key.hexstring }
+private def check_openssl(algo : String, data : String, key : Bytes, iv : Bytes? = nil) : String
+	args = if ( iv )
+		{ "enc", "-e", "-base64", "-nosalt", "-"+algo, "-K", key.hexstring, "-iv", iv.hexstring }
+	else
+		{ "enc", "-e", "-base64", "-nosalt", "-"+algo, "-K", key.hexstring }
+	end
 
 	return Process.run(OPENSSL, args, input: IO::Memory.new(data)) { |proc|
-		proc.output.gets_to_end.chomp
+		next proc.output.gets_to_end.chomp
 	}
 end
 
+private def check_correct(algo, key_size, key, iv, data, encrypted, decrypted)
+	base64 = Base64.strict_encode(encrypted)
+	check64 = check_openssl(algo, data, key, iv)
 
-{% for name in { "gcm", "ofb", "cfb", "ctr" } %}
+	decrypted.size.should be > 0
+	data.should eq(String.new(decrypted))
 
-	private def test_{{ name.id }}(key_size, key, iv, data)
+	base64.should eq(check64)
+end
 
-		key		= key.ljust((key_size/8).to_i, '\0').encode("UTF-8")
-		{% if name == "gcm" %}\
-			iv		= iv.ljust(12, '\0').encode("UTF-8")
-		{% else %}\
-			iv		= iv.ljust(16, '\0').encode("UTF-8")
-		{% end %}\
+{% for mode in { "gcm", "ofb", "cfb", "ctr", "ecb", "cbc", "xts" } %}#
 
-		encryptor = Crypto::AES::{{ name.upcase.id }}.encryptor(key, iv)
-		decryptor = Crypto::AES::{{ name.upcase.id }}.decryptor(key, iv)
+	private def test_{{ mode.id }}(key_size : Int, data : String, key : String, iv : String)
+		key = key.ljust((key_size/8).to_i, '\0').encode("UTF-8")
+		iv = iv.ljust(Crypto::AES::{{ mode.upcase.id }}.iv_size, '\0').encode("UTF-8")
+
+		{% if mode == "ecb" %}
+			encryptor = Crypto::AES::ECB.encryptor(key)
+			decryptor = Crypto::AES::ECB.decryptor(key)
+		{% else %}
+			encryptor = Crypto::AES::{{ mode.upcase.id }}.encryptor(key, iv)
+			decryptor = Crypto::AES::{{ mode.upcase.id }}.decryptor(key, iv)
+		{% end %}
 
 		encrypted = encryptor.encrypt(data)
 		decrypted = decryptor.decrypt(encrypted)
 
-		decrypted.size.should_not eq(0)
-		data.should eq(String.new(decrypted))
-		Base64.strict_encode(encrypted).should eq(check_openssl(key, iv, data,  "aes-#{key_size}-{{ name.id }}"))
-
+		check_correct("aes-#{key_size}-{{ mode.id }}", key_size, key, iv, data, encrypted, decrypted)
 	end
 
-	describe Crypto::AES::{{ name.upcase.id }} do
+	describe Crypto::AES::{{ mode.upcase.id }} do
 
 		it "works" do
-			test_{{ name.id }}(256, "foo", "bar", "foobardata")
-			test_{{ name.id }}(192, "foo", "bar", "foobardata")
-			test_{{ name.id }}(128, "foo", "bar", "foobardata")
+			test_{{ mode.id }}(256, "foobardata", "foo", "bar")
+			test_{{ mode.id }}(192, "foobardata", "foo", "bar")
+			test_{{ mode.id }}(128, "foobardata", "foo", "bar")
+
+			#test_{{ mode.id }}(256, "foobardata", "foo")
+			#test_{{ mode.id }}(192, "foobardata", "foo")
+			#test_{{ mode.id }}(128, "foobardata", "foo")
 		end
 
 	end

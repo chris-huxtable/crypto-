@@ -49,8 +49,7 @@ abstract class Crypto::Cipher
 
 	class Decryptor
 
-		def initialize(@cipher : Crypto::Cipher)
-		end
+		def initialize(@cipher : Crypto::Cipher); end
 
 		delegate(decrypt, to: @cipher)
 
@@ -58,8 +57,7 @@ abstract class Crypto::Cipher
 
 	class Encryptor
 
-		def initialize(@cipher : Crypto::Cipher)
-		end
+		def initialize(@cipher : Crypto::Cipher); end
 
 		delegate(encrypt, to: @cipher)
 
@@ -68,42 +66,5 @@ abstract class Crypto::Cipher
 		end
 
 	end
-
-end
-
-
-abstract class Crypto::OpenSSLCipher < Crypto::Cipher
-
-	BYTES_512 = 64 # 512/8
-	BYTES_256 = 32 # 256/8
-	BYTES_192 = 24 # 192/8
-	BYTES_128 = 16 # 128/8
-
-
-	# MARK: - Initializers
-
-	def initialize(key : Bytes, iv : Bytes? = nil)
-		check_key_size(key)
-		@cipher = OpenSSL::Cipher.new(cipher_string(key.size))
-		@cipher.key = key
-		( iv ) ? @cipher.iv = iv : @cipher.random_iv
-	end
-
-
-	# MARK: - Mutators
-
-	def encrypt(bytes : Bytes) : Bytes
-		return @cipher.update(bytes)
-	end
-
-	def decrypt(bytes : Bytes) : Bytes
-		return @cipher.update(bytes)
-	end
-
-
-	# MARK - Utilities
-
-	private abstract def check_key_size(key : Bytes) : Nil
-	private abstract def cipher_string(key_size : Int) : String
 
 end
